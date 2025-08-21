@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Dashboard: The Rise of E-commerce in 'Bharat'</title>
+    <!-- Chosen Palette: Avysh Brand Identity -->
+    <!-- Application Structure Plan: The SPA is designed as a narrative journey. It starts with a high-level "Dashboard" of KPIs to hook the user. It then flows into "The New Consumer," focusing on the 'why' behind the market shift. "The Arena" section details the competitive landscape, followed by an interactive "Category Deep Dive." The final section, "Future Outlook," presents projections. This thematic structure is more intuitive for exploration than a linear report, allowing users to grasp the core concepts (consumer, competition, categories, future) in a logical sequence. Navigation is handled by a sticky header, and interactivity is centered on chart hovers and clickable tabs for the category analysis, ensuring a focused and uncluttered user experience. A global filter has been added to allow segment-specific data views. -->
+    <!-- Visualization & Content Choices: 
+        - KPI Cards (Inform): Large numbers for immediate impact (HTML/CSS).
+        - Market Share (Compare): Donut chart (Chart.js) for clear proportional comparison of Flipkart, Amazon, Meesho.
+        - Consumer Drivers (Compare): Stacked bar chart (Chart.js) to contrast Metro vs. Tier 2/3 motivations (Convenience vs. Value).
+        - Discovery Channels (Compare): Horizontal bar chart (Chart.js) to visually rank the importance of Social Media, Marketplaces, and Search Engines.
+        - Category Deep Dive (Organize/Inform): Interactive tabs (HTML/JS) with accompanying text, KPI cards, and a uniform dynamic horizontal bar chart to allow users to explore specific category dynamics without cluttering the page. This is more engaging than a static table.
+        - Market Projections (Change): Line chart (Chart.js) to clearly show the growth trend and future market size forecasts.
+        - Justification: All choices prioritize clarity and interactivity on a single page. Chart.js with Canvas is used exclusively for visualizations to adhere to the NO SVG constraint. The interactive tabs for categories are a user-friendly way to present dense information from the reports. 
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F7F4;
+            color: #363636;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #3570C2;
+        }
+        .tab-button {
+            transition: all 0.3s;
+        }
+        .tab-button.active {
+            background-color: #3570C2;
+            color: #FFFFFF;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .sub-category-button {
+             transition: all 0.2s;
+        }
+        .sub-category-button.active {
+            background-color: #D0E2FE;
+            color: #3570C2;
+            font-weight: 600;
+        }
+        .global-filter-button {
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        .global-filter-button.active {
+            color: #3570C2;
+            border-bottom-color: #3570C2;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="sticky top-0 bg-[#F8F7F4]/80 backdrop-blur-sm z-50 shadow-sm">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold" style="color: #3570C2;">The 'Bharat' E-commerce Revolution</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#dashboard" class="nav-link font-semibold">Dashboard</a>
+                <a href="#consumer" class="nav-link font-semibold">The New Consumer</a>
+                <a href="#arena" class="nav-link font-semibold">The Arena</a>
+                <a href="#categories" class="nav-link font-semibold">Categories</a>
+                <a href="#future" class="nav-link font-semibold">Future Outlook</a>
+            </div>
+        </nav>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-b border-gray-300">
+            <nav id="globalFilter" class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button data-filter="all" class="global-filter-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg">All India</button>
+                <button data-filter="metro" class="global-filter-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg">Metro / Tier 1</button>
+                <button data-filter="tier2_3" class="global-filter-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg">Tier 2 / Tier 3</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <section id="dashboard" class="pt-28 -mt-28 mb-12">
+            <div class="text-center mb-10">
+                <h2 id="dashboardTitle" class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-2">The Digital Shopping Cart of a Nation</h2>
+                <p id="dashboardSubtitle" class="max-w-3xl mx-auto text-gray-600">An interactive analysis of how Tier 2 & 3 cities are powering India's e-commerce future. This dashboard synthesizes key metrics shaping the market.</p>
+            </div>
+            <div id="kpiContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            </div>
+        </section>
+
+        <section id="consumer" class="pt-28 -mt-28 mb-12">
+            <div class="text-center mb-10">
+                <h2 id="consumerTitle" class="text-3xl font-extrabold text-gray-800 mb-2">A Tale of Two Consumers</h2>
+                <p id="consumerSubtitle" class="max-w-3xl mx-auto text-gray-600">The online shopper in 'Bharat' is driven by fundamentally different motivations than their metro counterparts. Understanding this distinction between value-seeking and convenience is key to unlocking the market.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold mb-2 text-center">Primary Purchase Drivers</h3>
+                    <p id="consumerDriverSubtitle" class="text-center text-sm text-gray-600 mb-4">Metro consumers prioritize speed, while Tier 2/3 consumers seek value and trust above all.</p>
+                    <div class="chart-container">
+                        <canvas id="consumerDriverChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold mb-2 text-center">The New Discovery Funnel</h3>
+                    <p class="text-center text-sm text-gray-600 mb-4">The journey no longer starts with a search bar. Social and video platforms have become the dominant engines for product discovery.</p>
+                    <div class="chart-container">
+                        <canvas id="discoveryChannelChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="arena" class="pt-28 -mt-28 mb-12">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-extrabold text-gray-800 mb-2">The Arena of Giants</h2>
+                <p class="max-w-3xl mx-auto text-gray-600">The market has trifurcated. Flipkart leads the mass market, Amazon captures premium aspirations, and Meesho has disrupted the landscape by creating a new hyper-value segment.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-center">
+                <div class="md:col-span-3 bg-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold mb-2 text-center">E-commerce Market Share (2024)</h3>
+                    <p class="text-center text-sm text-gray-600 mb-4">A look at how the major players stack up in the battle for the Indian consumer.</p>
+                    <div class="chart-container">
+                        <canvas id="marketShareChart"></canvas>
+                    </div>
+                </div>
+                <div class="md:col-span-2 space-y-4">
+                    <div class="bg-white p-5 rounded-xl shadow-md">
+                        <h4 class="font-bold text-lg" style="color: #3570C2;">Flipkart (48%)</h4>
+                        <p class="text-sm text-gray-600">Dominates through deep localization, a hyperlocal logistics network, and a brand perception of affordability and trust.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-md">
+                        <h4 class="font-bold text-lg" style="color: #FFBF00;">Amazon (32%)</h4>
+                        <p class="text-sm text-gray-600">Captures aspirational spending, leveraging its global brand trust for premium products, even in smaller cities.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-md">
+                        <h4 class="font-bold text-lg" style="color: #D60101;">Meesho (12%)</h4>
+                        <p class="text-sm text-gray-600">The hyper-growth disruptor, winning with a zero-commission, social commerce model focused on unbranded, hyper-value goods.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="categories" class="pt-28 -mt-28 mb-12">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-extrabold text-gray-800 mb-2">The Digital Shopping Cart</h2>
+                <p class="max-w-3xl mx-auto text-gray-600">Purchasing patterns reveal a consumer who is both value-conscious and aspirational. Explore the dynamics of the most significant product categories. Click a tab to see the details.</p>
+            </div>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-6" id="categoryTabs">
+                <button data-target="fashion" class="tab-button active text-sm md:text-base font-semibold py-2 px-4 rounded-full bg-white shadow-sm">👗 Fashion & Apparel</button>
+                <button data-target="electronics" class="tab-button text-sm md:text-base font-semibold py-2 px-4 rounded-full bg-white shadow-sm">📱 Electronics & Appliances</button>
+                <button data-target="bpc" class="tab-button text-sm md:text-base font-semibold py-2 px-4 rounded-full bg-white shadow-sm">💄 Beauty & Personal Care</button>
+                <button data-target="home" class="tab-button text-sm md:text-base font-semibold py-2 px-4 rounded-full bg-white shadow-sm">🛋️ Home & Health</button>
+            </div>
+            <div id="categoryContent" class="bg-white p-6 md:p-8 rounded-xl shadow-md min-h-[420px]">
+            </div>
+        </section>
+
+        <section id="future" class="pt-28 -mt-28">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-extrabold text-gray-800 mb-2">The $200 Billion+ Horizon</h2>
+                <p class="max-w-3xl mx-auto text-gray-600">The Indian e-commerce market is projected for explosive growth, driven by new technologies and evolving consumer behaviors. The future will be conversational, personalized, and deeply integrated into social platforms.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                     <h3 class="text-xl font-bold mb-2 text-center">Market Size Projections (USD Billions)</h3>
+                     <p class="text-center text-sm text-gray-600 mb-4">Synthesized forecasts show the market more than doubling in the coming years.</p>
+                    <div class="chart-container">
+                        <canvas id="marketProjectionChart"></canvas>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="font-bold text-lg" style="color: #3570C2;">Conversational Commerce</h4>
+                        <p class="text-gray-600">AI chatbots and voice assistants will blur the line between search and conversation, guiding users through their shopping journey with natural language.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg" style="color: #3570C2;">Hyper-Personalization at Scale</h4>
+                        <p class="text-gray-600">Predictive AI will power discovery feeds, showing consumers products before they even search, solidifying the shift from active search to passive discovery.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg" style="color: #3570C2;">Social Commerce Integration</h4>
+                        <p class="text-gray-600">In-app checkouts on platforms like Instagram and YouTube will make the journey from discovery to purchase instantaneous, removing friction.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let state = {
+                currentFilter: 'all',
+                currentCategory: 'fashion',
+            };
+            const charts = {};
+            const categoryContentContainer = document.getElementById('categoryContent');
+
+            const palette = {
+                primary: '#3570C2',
+                secondary: '#FFBF00',
+                accent1: '#D60101',
+                accent2: '#39A201',
+                dark: '#363636',
+                light: '#D0E2FE'
+            };
+            
+            const tooltipConfig = {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                return Array.isArray(label) ? label.join(' ') : label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 20, boxWidth: 15, font: { size: 12 } }
+                    }
+                }
+            };
+            
+            const allData = {
+                all: {
+                    dashboard: {
+                        title: "The Digital Shopping Cart of a Nation",
+                        subtitle: "An interactive analysis of how Tier 2 & 3 cities are powering India's e-commerce future. This dashboard synthesizes key metrics shaping the market.",
+                        kpis: [
+                            { value: '60%', label: "Tier 2/3 Share of E-commerce Demand", color: palette.primary },
+                            { value: '68%', label: "Discover New Products on Social Media", color: palette.accent2 },
+                            { value: '86%', label: "Growth in Vernacular Google Searches", color: palette.secondary }
+                        ]
+                    },
+                    consumer: {
+                        title: "A Tale of Two Consumers",
+                        subtitle: "The online shopper in 'Bharat' is driven by fundamentally different motivations than their metro counterparts. Understanding this distinction is key.",
+                        driverSubtitle: "Metro consumers prioritize speed, while Tier 2/3 consumers seek value and trust.",
+                        driverChart: {
+                            type: 'bar',
+                            labels: ['Metro / Tier 1', 'Tier 2 / Tier 3'],
+                            datasets: [
+                                { label: 'Convenience & Speed', data: [50, 25], backgroundColor: palette.primary },
+                                { label: 'Value & Trust', data: [28, 54], backgroundColor: palette.secondary }
+                            ],
+                            options: { indexAxis: 'y', scales: { x: { stacked: true }, y: { stacked: true } } }
+                        },
+                        discoveryChart: {
+                            labels: ['Social/Video (Discovery)', 'Marketplaces (Transaction)', 'Google (Research)'],
+                            datasets: [{ data: [68, 30, 14], backgroundColor: [palette.accent1, palette.secondary, palette.primary] }]
+                        }
+                    },
+                    marketShare: {
+                        labels: ['Flipkart', 'Amazon', 'Meesho', 'Others'],
+                        datasets: [{ data: [48, 32, 12, 8], backgroundColor: [palette.primary, palette.secondary, palette.accent1, palette.dark] }]
+                    }
+                },
+                metro: {
+                    dashboard: {
+                        title: "Metro / Tier 1: The Convenience Economy",
+                        subtitle: "Analysis of India's most mature e-commerce markets, where speed, brand variety, and premium experiences are paramount.",
+                        kpis: [
+                            { value: '40%', label: "Share of E-commerce Demand", color: palette.primary },
+                            { value: '50%', label: "Prioritize Quick Delivery", color: palette.accent2 },
+                            { value: '35%', label: "Start Search on Marketplaces", color: palette.secondary }
+                        ]
+                    },
+                    consumer: {
+                        title: "The Metro Consumer",
+                        subtitle: "This consumer is digitally savvy, brand-conscious, and values time over money, driving the demand for premium products and instant delivery.",
+                        driverSubtitle: "Convenience is the primary driver, followed by brand trust and product variety.",
+                        driverChart: {
+                            type: 'doughnut',
+                            labels: ['Convenience', 'Brand Trust', 'Value'],
+                            datasets: [{ data: [50, 30, 20], backgroundColor: [palette.primary, palette.accent2, palette.secondary] }],
+                            options: {}
+                        },
+                        discoveryChart: {
+                            labels: ['Marketplaces', 'Google', 'Social/Video'],
+                            datasets: [{ data: [45, 35, 20], backgroundColor: [palette.secondary, palette.primary, palette.accent1] }]
+                        }
+                    },
+                    marketShare: {
+                        labels: ['Amazon', 'Flipkart (Myntra)', 'D2C Brands', 'Others'],
+                        datasets: [{ data: [45, 40, 10, 5], backgroundColor: [palette.secondary, palette.primary, palette.accent2, palette.dark] }]
+                    }
+                },
+                tier2_3: {
+                    dashboard: {
+                        title: "Tier 2/3: The Value-First Revolution",
+                        subtitle: "Deep dive into 'Bharat', the engine of India's e-commerce growth, where trust, affordability, and community are the currencies of commerce.",
+                         kpis: [
+                            { value: '60%', label: "Share of E-commerce Demand", color: palette.primary },
+                            { value: '54%', label: "Prioritize Deals & Offers", color: palette.accent2 },
+                            { value: '75%', label: "Premium Electronic Sales", color: palette.secondary }
+                        ]
+                    },
+                    consumer: {
+                        title: "The 'Bharat' Consumer",
+                        subtitle: "This consumer is aspirational yet value-conscious, relying on social proof and community validation to make purchase decisions.",
+                        driverSubtitle: "Value and trust are the primary drivers, outweighing all other factors.",
+                        driverChart: {
+                            type: 'doughnut',
+                            labels: ['Value & Trust', 'Convenience', 'Brand Name'],
+                            datasets: [{ data: [54, 25, 21], backgroundColor: [palette.secondary, palette.primary, palette.accent2] }],
+                            options: {}
+                        },
+                        discoveryChart: {
+                            labels: ['Social/Video', 'Marketplaces', 'Google'],
+                            datasets: [{ data: [68, 22, 10], backgroundColor: [palette.accent1, palette.secondary, palette.primary] }]
+                        }
+                    },
+                    marketShare: {
+                        labels: ['Flipkart', 'Amazon', 'Meesho', 'Others'],
+                        datasets: [{ data: [50, 25, 18, 7], backgroundColor: [palette.primary, palette.secondary, palette.accent1, palette.dark] }]
+                    }
+                }
+            };
+
+            const categoryData = {
+                fashion: {
+                    summary: {
+                        title: '👗 Fashion & Apparel',
+                        content: 'The largest and most contested category, driving customer acquisition. In Tier 2/3 cities, demand is high for affordable, often unbranded ethnic and casual wear, making it the core business for platforms like Meesho.',
+                        stats: [{ value: '32%', label: 'of B2C Revenue' }, { value: '60%', label: 'Flipkart Group Market Share' }],
+                        discoveryFunnel: { data: [70, 22, 8], title: 'Overall Fashion Discovery Funnel (%)' }
+                    },
+                    subCategories: {
+                        ethnic: {
+                            title: 'Ethnic Wear',
+                            content: 'The backbone of value-fashion, driven by festive seasons and local preferences. Platforms like Meesho dominate with unbranded sarees and kurtas, leveraging social commerce.',
+                            stats: [{ value: '65%', label: 'of Fashion GMV on Meesho' }],
+                            discoveryFunnel: { data: [75, 20, 5], title: 'Ethnic Wear Discovery Funnel (%)' }
+                        },
+                        western: {
+                            title: 'Western Wear',
+                            content: 'A rapidly growing segment indicating modernizing tastes in smaller towns. Discovery is highly influenced by Instagram creators and fast-fashion trends.',
+                            stats: [{ value: '45%', label: 'YoY Growth in Tier 2/3' }],
+                            discoveryFunnel: { data: [80, 15, 5], title: 'Western Wear Discovery Funnel (%)' }
+                        },
+                        footwear: {
+                            title: 'Footwear',
+                            content: 'A high-volume category where both brands and value play a role. Consumers research trends on social media but often transact on major marketplaces like Flipkart.',
+                            stats: [{ value: '30%', label: 'of Myntra\'s Orders from Tier 2/3' }],
+                            discoveryFunnel: { data: [50, 30, 20], title: 'Footwear Discovery Funnel (%)' }
+                        }
+                    }
+                },
+                electronics: {
+                    summary: {
+                        title: '📱 Electronics & Appliances',
+                        content: 'This category showcases the "premiumization paradox" of \'Bharat\'. While affordable smartphones are a staple, a staggering percentage of premium electronics sales on platforms like Amazon now originate from non-metro cities.',
+                        stats: [{ value: '~70%', label: 'of E-Retail Sales (with Apparel)' }, { value: '75%', label: 'Premium Sales from Non-Metros' }],
+                        discoveryFunnel: { data: [28, 31, 41], title: 'Overall Electronics Discovery Funnel (%)' }
+                    },
+                    subCategories: {
+                        smartphones: {
+                            title: 'Smartphones',
+                            content: 'The gateway product for new e-commerce users. The journey involves significant research on Google and YouTube for reviews before comparing EMI offers on Amazon/Flipkart.',
+                            stats: [{ value: '70%', label: 'Premium Phone Sales from Non-Metros' }],
+                            discoveryFunnel: { data: [30, 30, 40], title: 'Smartphone Discovery Funnel (%)' }
+                        },
+                        appliances: {
+                            title: 'Large Appliances',
+                            content: 'High-consideration purchases like TVs and washing machines. The consumer journey is research-heavy, relying on Google for specs and YouTube for demos.',
+                            stats: [{ value: '80%', label: 'Large TV Sales from Non-Metros' }],
+                            discoveryFunnel: { data: [20, 30, 50], title: 'Appliance Discovery Funnel (%)' }
+                        },
+                        laptops: {
+                            title: 'Laptops & Accessories',
+                            content: 'Demand is driven by students and professionals. The purchase decision is a balance of specifications (researched on Google) and deals (found on marketplaces).',
+                            stats: [{ value: '55%', label: 'Gaming Laptop Growth in Tier 2' }],
+                            discoveryFunnel: { data: [25, 35, 40], title: 'Laptop Discovery Funnel (%)' }
+                        }
+                    }
+                },
+                bpc: {
+                    summary: {
+                        title: '💄 Beauty & Personal Care',
+                        content: 'This is one of the fastest-growing segments, fueled by social media trends and influencer marketing. There is a massive surge in demand from smaller towns for self-care, grooming, and makeup products.',
+                        stats: [{ value: '$30B', label: 'Projected GMV by 2027' }, { value: '4x', label: 'Demand Increase from Non-Metros' }],
+                        discoveryFunnel: { data: [78, 15, 7], title: 'Overall BPC Discovery Funnel (%)' }
+                    },
+                    subCategories: {
+                        skincare: {
+                            title: 'Skincare & Bodycare',
+                            content: 'This segment is exploding, driven by influencer tutorials on routines and product benefits. Trust is built via video reviews before consumers search for specific D2C brands.',
+                            stats: [{ value: '4x', label: 'Demand from Non-Metros during Sales' }],
+                            discoveryFunnel: { data: [70, 20, 10], title: 'Skincare Discovery Funnel (%)' }
+                        },
+                        makeup: {
+                            title: 'Makeup & Fragrances',
+                            content: 'A highly visual and trend-driven category. Discovery is almost entirely on Instagram and YouTube through tutorials and "Get Ready With Me" videos.',
+                            stats: [{ value: '60%', label: 'of Nykaa\'s new users from Tier 2/3' }],
+                            discoveryFunnel: { data: [85, 10, 5], title: 'Makeup Discovery Funnel (%)' }
+                        }
+                    }
+                },
+                home: {
+                    summary: {
+                        title: '🛋️ Home & Health',
+                        content: 'Rapid growth in categories like home decor and health supplements signals a major shift in consumer priorities. The post-pandemic focus on improving the home environment and proactive health consciousness is driving triple-digit growth.',
+                        stats: [{ value: '>80%', label: 'YoY Growth (Health & Pharma)' }, { value: '100%', label: 'Order Growth (Home Decor, Tier 3)' }],
+                        discoveryFunnel: { data: [35, 50, 15], title: 'Overall Home & Health Discovery Funnel (%)' }
+                    },
+                     subCategories: {
+                        decor: {
+                            title: 'Home Decor & Furnishings',
+                            content: 'A post-pandemic boom category reflecting a focus on lifestyle enhancement. Inspiration is drawn from social platforms like Pinterest, leading to searches on marketplaces.',
+                            stats: [{ value: '100%', label: 'Order Growth in Tier 3 Cities' }],
+                            discoveryFunnel: { data: [60, 30, 10], title: 'Home Decor Discovery Funnel (%)' }
+                        },
+                        health: {
+                            title: 'Health & Wellness',
+                            content: 'A proactive shift towards health consciousness is driving high demand for supplements and health devices. Consumers research benefits on Google before buying.',
+                            stats: [{ value: '>80%', label: 'YoY Growth in Orders' }],
+                            discoveryFunnel: { data: [40, 30, 30], title: 'Health & Wellness Discovery Funnel (%)' }
+                        },
+                        groceries: {
+                            title: 'Groceries (Q-commerce)',
+                            content: 'This category is defined by convenience and speed. Search and discovery happen almost exclusively within quick-commerce apps like Zepto and Blinkit.',
+                            stats: [{ value: '75%', label: 'Annual Growth of Q-Commerce' }],
+                            discoveryFunnel: { data: [5, 90, 5], title: 'Grocery Discovery Funnel (%)' }
+                        }
+                    }
+                }
+            };
+            
+            function updateDashboard() {
+                const data = allData[state.currentFilter];
+
+                document.getElementById('dashboardTitle').innerText = data.dashboard.title;
+                document.getElementById('dashboardSubtitle').innerText = data.dashboard.subtitle;
+                const kpiContainer = document.getElementById('kpiContainer');
+                kpiContainer.innerHTML = '';
+                data.dashboard.kpis.forEach(kpi => {
+                    kpiContainer.innerHTML += `
+                        <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                            <p class="text-sm font-semibold text-gray-500">${kpi.label}</p>
+                            <p class="text-6xl font-extrabold my-2" style="color: ${kpi.color};">${kpi.value}</p>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('consumerTitle').innerText = data.consumer.title;
+                document.getElementById('consumerSubtitle').innerText = data.consumer.subtitle;
+                document.getElementById('consumerDriverSubtitle').innerText = data.consumer.driverSubtitle;
+
+                const driverChartConfig = {
+                    type: data.consumer.driverChart.type,
+                    data: {
+                        labels: data.consumer.driverChart.labels,
+                        datasets: data.consumer.driverChart.datasets
+                    },
+                    options: { ...tooltipConfig, ...data.consumer.driverChart.options, maintainAspectRatio: false }
+                };
+                createOrUpdateChart('consumerDriverChart', driverChartConfig);
+                
+                const discoveryChartConfig = {
+                    type: 'bar',
+                    data: {
+                        labels: data.consumer.discoveryChart.labels,
+                        datasets: data.consumer.discoveryChart.datasets
+                    },
+                    options: { ...tooltipConfig, maintainAspectRatio: false, indexAxis: 'y', plugins: { ...tooltipConfig.plugins, legend: { display: false } }, scales: { x: { title: { display: true, text: '% of Consumers Influenced' } } } }
+                };
+                createOrUpdateChart('discoveryChannelChart', discoveryChartConfig);
+                
+                const marketShareConfig = {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.marketShare.labels,
+                        datasets: data.marketShare.datasets
+                    },
+                    options: { ...tooltipConfig, maintainAspectRatio: false }
+                };
+                createOrUpdateChart('marketShareChart', marketShareConfig);
+
+                updateCategoryContent(state.currentCategory);
+            }
+
+            function createOrUpdateChart(id, config) {
+                const ctx = document.getElementById(id).getContext('2d');
+                if (charts[id]) {
+                    charts[id].destroy();
+                }
+                charts[id] = new Chart(ctx, config);
+            }
+            
+            function renderCategoryContent(data) {
+                let statsHtml = '<div class="grid grid-cols-2 gap-4">';
+                data.stats.forEach(stat => {
+                    statsHtml += `
+                        <div class="bg-gray-50 p-3 rounded-lg text-center">
+                            <p class="text-3xl font-bold" style="color:${palette.primary};">${stat.value}</p>
+                            <p class="text-xs text-gray-600">${stat.label}</p>
+                        </div>
+                    `;
+                });
+                statsHtml += '</div>';
+
+                document.getElementById('subCategoryDetail').innerHTML = `
+                    <h4 class="text-2xl font-bold mb-3">${data.title}</h4>
+                    <p class="text-gray-600 mb-6">${data.content}</p>
+                    ${statsHtml}
+                `;
+
+                const chartConfig = {
+                    type: 'bar',
+                    data: {
+                        labels: ['Social/Video (Discovery)', 'Marketplaces (Transaction)', 'Google (Research)'],
+                        datasets: [{
+                            label: data.discoveryFunnel.title,
+                            data: data.discoveryFunnel.data,
+                            backgroundColor: [palette.accent1, palette.secondary, palette.primary],
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: { legend: { display: false }, title: { display: true, text: data.discoveryFunnel.title } },
+                        scales: { x: { beginAtZero: true, max: 100, title: { display: true, text: '% of Consumers Influenced' } } }
+                    }
+                };
+                createOrUpdateChart('categoryChartCanvas', chartConfig);
+            }
+            
+            function updateCategoryContent(mainCategory) {
+                state.currentCategory = mainCategory;
+                const mainCategoryData = categoryData[mainCategory];
+                const subCategoryKeys = Object.keys(mainCategoryData.subCategories);
+
+                let subCategoryButtonsHtml = '<div id="subCategoryTabs" class="flex flex-wrap gap-2 mb-6">';
+                subCategoryKeys.forEach((key) => {
+                    subCategoryButtonsHtml += `<button data-maincategory="${mainCategory}" data-subcategory="${key}" class="sub-category-button text-sm font-medium py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200">${mainCategoryData.subCategories[key].title}</button>`;
+                });
+                subCategoryButtonsHtml += '</div>';
+                
+                categoryContentContainer.innerHTML = `
+                    ${subCategoryButtonsHtml}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div id="subCategoryDetail"></div>
+                        <div class="h-64">
+                            <canvas id="categoryChartCanvas"></canvas>
+                        </div>
+                    </div>
+                `;
+                
+                renderCategoryContent(mainCategoryData.summary);
+
+                document.getElementById('subCategoryTabs').addEventListener('click', function(e) {
+                    if (e.target.tagName === 'BUTTON') {
+                        document.querySelectorAll('.sub-category-button').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+                        const subCat = e.target.dataset.subcategory;
+                        renderCategoryContent(mainCategoryData.subCategories[subCat]);
+                    }
+                });
+            }
+            
+            function init() {
+                document.getElementById('globalFilter').addEventListener('click', function(e) {
+                    if (e.target.tagName === 'BUTTON') {
+                        state.currentFilter = e.target.dataset.filter;
+                        document.querySelectorAll('.global-filter-button').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+                        updateDashboard();
+                    }
+                });
+
+                document.getElementById('categoryTabs').addEventListener('click', function(e) {
+                    if (e.target.tagName === 'BUTTON') {
+                        const targetCategory = e.target.dataset.target;
+                        document.getElementById('categoryTabs').querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+                        updateCategoryContent(targetCategory);
+                    }
+                });
+                
+                createOrUpdateChart('marketProjectionChart', {
+                    type: 'line',
+                    data: {
+                        labels: ['2025', '2026', '2027'],
+                        datasets: [{
+                            label: 'Market Projection (USD Bn)',
+                            data: [148, 191, 237],
+                            borderColor: palette.primary,
+                            backgroundColor: 'rgba(53, 112, 194, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: { ...tooltipConfig, maintainAspectRatio: false, scales: { y: { title: { display: true, text: 'Market Size (USD Billions)' } } } }
+                });
+
+                updateDashboard();
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>
